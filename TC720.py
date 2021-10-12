@@ -800,6 +800,51 @@ class TC720():
         location_code = 'e' + str(location-1)
         self.send_message(self.message_builder(location_code, self.int_to_hex(repeat_loc)), write=True)
 
+    def set_sensor1_choice(self, sensor_choice):
+        """
+        Set the sensor 
+        Input:
+        `control_type`:
+            0 = 5KΩ thermistor
+            1 = 10 kΩ thermistor, type 1 (TS-91)
+            2 = 10 kΩ thermistor, type 2 (TP-53)
+            3 = 15 kΩ thermistor
+            4 = 50 kΩ thermistor
+            5 = 230 kΩ thermistor 
+            6 = user defined table
+            supply.
+        """
+        #Check input
+        if sensor_choice not in [0, 1, 2, 3, 4, 5, 6]:
+            raise ValueError('Invalid input: {}, should be integer 0, 1, 2, 3, 4, 5, 6'.format(repr(control_type)))
+
+        #Set the control type
+        self.send_message(self.message_builder('20',  self.int_to_hex(sensor_choice)), write=True)
+        self.verboseprint('Sensor 1 choice set to: {}'.format(sensor_choice))
+
+    def set_sensor2_choice(self, sensor_choice):
+        """
+        Set the sensor 
+        Input:
+        `control_type`:
+            0 = 5KΩ thermistor
+            1 = 10 kΩ thermistor, type 1 (TS-91)
+            2 = 10 kΩ thermistor, type 2 (TP-53)
+            3 = 15 kΩ thermistor
+            4 = 50 kΩ thermistor
+            5 = 230 kΩ thermistor 
+            6 = user defined table
+            supply.
+        """
+        #Check input
+        if sensor_choice not in [0, 1, 2, 3, 4, 5, 6]:
+            raise ValueError('Invalid input: {}, should be integer 0, 1, 2, 3, 4, 5, 6'.format(repr(control_type)))
+
+        #Set the control type
+        self.send_message(self.message_builder('47',  self.int_to_hex(sensor_choice)), write=True)
+        self.verboseprint('Sensor 2 choice set to: {}'.format(sensor_choice))
+
+
     #--------------------------------------------------------------------------
     #    Start stop functions
     #--------------------------------------------------------------------------
