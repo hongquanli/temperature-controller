@@ -125,8 +125,7 @@ class TC720():
     Class to control the TC-720 temperature controller from TE Technology Inc. 
     
     """
-    def __init__(self, address, name = 'TC-720', mode = 0, control_type = 0,
-                 default_temp = 20, verbose = False):
+    def __init__(self, address, name = 'TC-720', default_temp = None, verbose = False):
         """
         Input:
         `address`(str): The address of TC-720. Use the "find_address()" function
@@ -153,9 +152,6 @@ class TC720():
         """
         self.address = address
         self.name = name
-        self.mode = mode
-        self.control_type = control_type
-        self.default_temp = default_temp
         self.verbose = verbose
         self.verboseprint = print if self.verbose else lambda *a, **k: None
 
@@ -163,11 +159,12 @@ class TC720():
         self.ser = serial.Serial(self.address, timeout= 2, baudrate=230400, stopbits=serial.STOPBITS_ONE, parity=serial.PARITY_NONE)
         self.verboseprint('Made connection with temperature controller: {}'.format(self.name))
 
-        #Set the machine into temperature control
-        self.set_temp(self.default_temp)
-        self.set_mode(self.mode)
-        self.set_control_type(self.control_type)
-        self.verboseprint('Mode set to: {}, control type set to: {}, temperature set to: {}C'.format(self.mode, self.control_type, self.default_temp))
+        #Set the machine into temperature control if default_temp is not None
+        if default_temp != None:
+            self.set_temp(default_temp)
+            self.set_mode(0)
+            self.set_control_type(0)
+            self.verboseprint('Mode set to: {}, control type set to: {}, temperature set to: {}C'.format(0, 0, self.default_temp))
 
     #==========================================================================
     #    Functions for sending and reading messages
