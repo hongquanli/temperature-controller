@@ -455,23 +455,23 @@ class TC720():
     def get_output(self):
         """
         Get the current output level.
-        Returns the current output in the range -511 to 511
+        Returns the current output in the range -1 to 1
         for -100% and 100% output power.
 
         """
         self.send_message(self.message_builder('02'))
-        return self.response_to_int(self.read_message())
+        return self.response_to_int(self.read_message())/511.0
 
 
     def get_set_output(self):
         """
         Get the set manual output.
-        Returns the set output in the range -511 to 511
+        Returns the set output in the range -1 to 1
         for -100% and 100% output power.
 
         """
         self.send_message(self.message_builder('74'))
-        return self.response_to_int(self.read_message())
+        return self.response_to_int(self.read_message())/511.0
 
     def get_ramp_soak_status(self):
         """
