@@ -190,7 +190,7 @@ class TC720():
 
         #Negative numbers
         if integer < 0:
-            integer = int((0.5 * 2**16) - integer)
+            integer = int(2**16 + integer)
         
         return '{h:0>4}'.format(h = hex(integer)[2:])
 
