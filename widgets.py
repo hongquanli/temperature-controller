@@ -48,10 +48,14 @@ class ControlPanel(QFrame):
 		self.entry_set_temperature.setValue(20)
 		self.btn_update_set_temperature = QPushButton('Update')
 
+		self.btn_enable_output = QPushButton('Enable Output')
+		self.btn_enable_output.setCheckable(True)
+
 		grid_line3 = QGridLayout()
 		grid_line3.addWidget(QLabel('Set Temperature'),0,0)
 		grid_line3.addWidget(self.entry_set_temperature, 0,1)
 		grid_line3.addWidget(self.btn_update_set_temperature,0,10)
+		grid_line3.addWidget(self.btn_enable_output,10,0,1,11)
 
 		# for displaying stepper position and flow/pressure measurements
 		self.label_channel_readings = {}
@@ -71,10 +75,10 @@ class ControlPanel(QFrame):
 		grid_line4.addWidget(self.label_channel_readings[str(3)],3,1)
 		
 		self.grid = QVBoxLayout()
-		self.grid.addLayout(grid_line2)
 		self.grid.addLayout(grid_line3)
 		self.grid.addLayout(grid_line4)
 		self.grid.addStretch()
+		self.grid.addLayout(grid_line2)
 		# self.grid.addWidget(self.label_channel_readings_print,3,0,1,8)
 
 		self.setLayout(self.grid)
@@ -82,6 +86,7 @@ class ControlPanel(QFrame):
 		# connections
 		self.btn_logging_onoff.clicked.connect(self.logging_onoff)
 		self.btn_update_set_temperature.clicked.connect(self.update_set_temperature)
+		self.btn_enable_output.clicked.connect(self.update_output_enable)
 
 	def logging_onoff(self,state):
 		self.signal_logging_onoff.emit(state, self.lineEdit_experimentID.text())
@@ -91,8 +96,12 @@ class ControlPanel(QFrame):
 			self.label_channel_readings[str(i)].setText(str(readings[i]))
 
 	def update_set_temperature(self):
+		self.signal_tc720_parameter_update_command.emit('set_mode',[0]) # get into the normal set mode
 		self.signal_tc720_parameter_update_command.emit('set_control_type',[0]) # get into the PID mode
 		self.signal_tc720_parameter_update_command.emit('set_temp',[self.entry_set_temperature.value()])
+
+	def update_output_enable(self,enable):
+		self.signal_tc720_parameter_update_command.emit('set_output_enable',[int(enable)]) # get into the normal set mode
 
 
 class WaveformDisplay(QFrame):

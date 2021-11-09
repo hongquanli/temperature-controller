@@ -15,7 +15,7 @@ class GUI(QMainWindow):
 
 	def __init__(self, is_simulation = False, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.tc720Controller = controllers.TC720Controller(serial_number='AH05OQGC')
+		self.tc720Controller = controllers.TC720Controller(serial_number='AH05OQGC',is_simulation=is_simulation)
 
 		# widget
 		self.controlPanel = widgets.ControlPanel()
@@ -32,6 +32,9 @@ class GUI(QMainWindow):
 		# connections
 		self.controlPanel.signal_tc720_parameter_update_command.connect(self.tc720Controller.update_controller_parameter)
 		self.tc720Controller.signal_readings.connect(self.controlPanel.display_readings)
+
+		# start
+		self.tc720Controller.start()
 
 	def closeEvent(self, event):
 		event.accept()

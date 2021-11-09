@@ -13,15 +13,21 @@ class TC720Controller(QObject):
 
     signal_readings = Signal(list)
 
-    def __init__(self, serial_number=None):
+    def __init__(self, serial_number=None,is_simulation=False):
         QObject.__init__(self)
 
         # initialize the TC720 controller
-        self.tc720 = TC720.TC720(serial_number=serial_number)
+        if is_simulation == False:
+            self.tc720 = TC720.TC720(serial_number=serial_number)
+        else:
+            self.tc720 = TC720.TC720_simulation(serial_number=serial_number)
 
         # inti. the controller
         self.tc720.set_sensor1_choice(1) # 10 kΩ thermistor, type 1 (TS-91)
         self.tc720.set_sensor2_choice(1) # 10 kΩ thermistor, type 1 (TS-91)
+
+        # controller parameters
+        self.set_temperature = 20
 
         # queue for updating parameters
         self.queue_parameter_update_command = queue.Queue()
@@ -32,13 +38,11 @@ class TC720Controller(QObject):
         self.terminate_the_writing_thread = False
         self.writing_lock_requested = False
         self.thread_read = threading.Thread(target=self.read_temperature_and_output, daemon=True)
-        self.thread_read.start()
         self.thread_write = threading.Thread(target=self.send_parameter_update_commands, daemon=True)
+        
+    def start(self):
+        self.thread_read.start()
         self.thread_write.start()
-
-        # controller parameters
-        self.set_temperature = 20
-
 
     def read_temperature_and_output(self):
         while(self.terminate_the_reading_thread == False):
