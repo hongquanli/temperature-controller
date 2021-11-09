@@ -702,6 +702,16 @@ class TC720():
         self.send_message(self.message_builder('40',  self.int_to_hex(output)), write=True)
         self.verboseprint('Output set to: {}'.format(output))
 
+    def set_output_enable(self,enable):
+        """
+        Set the output enable.
+        Input:
+        `enable: 0:off, 1: on.
+        """
+        self.send_message(self.message_builder('30',  self.int_to_hex(enable)), write=True)
+        self.verboseprint('Output Enable set to: {}'.format(output))
+
+
     #---------------------------------------------------------------------------
     #    Set functions for ramp/soak mode
     #    Functions to set the ramp/soak sequence.
@@ -1091,3 +1101,292 @@ class TC720():
                 warnings.warn('Error(s) on {}: {}. {}'.format(self.name, current_errors, reset))
                 return [False, 'Error(s) on {}: {}. {}'.format(self.name, current_errors, reset)]
 
+class TC720_simulation():
+    def __init__(self, address = None, serial_number = None, name = 'TC-720', default_temp = None, verbose = False):
+        pass
+
+    #==========================================================================
+    #    Functions for sending and reading messages
+    #==========================================================================
+
+    def int_to_hex(self, integer):
+        """
+        Formats integers to hexadecimal encoded string, to use in the 
+        self.message_builder function. Max is 32768.
+        Handles negative numbers
+        
+        """
+        if abs(integer) > 32768:
+            raise ValueError('Can not encode positive or negative integers larger than  32768 in length 4 hexadecimal number.')
+
+        #Negative numbers
+        if integer < 0:
+            integer = int(2**16 + integer)
+        
+        return '{h:0>4}'.format(h = hex(integer)[2:])
+
+    def response_to_int(self, response):
+        """
+        Returns the integer representation of the response of the 4 data bits.
+        Handles negative numbers.
+        
+        """
+        response = int(response[1:5], base=16)
+        #Check if it is a negative number, if yes, invert it to the correct value.
+        if response > 0.5 * (2**16): 
+            response = -(2**16 - response)
+        return response
+
+    def make_checksum(self, message):
+        """
+        Make the 2 bit checksum for messages. It calculates the 8 bit, modulo 
+        256 checksum in the format of 2 ASCII hex characters.
+        Returns the checksum as a string.
+        
+        """
+        if type(message) == list:
+            message = ''.join(message)
+            
+        if type(message) == bytes:
+            message = message.decode()
+            
+        checksum = hex(sum(message[1:7].encode('ascii')) % 256)[-2:]
+        return checksum
+
+    def check_checksum(self, response):
+        """
+        Checks if the checksum of the response is correct.
+        Input:
+        `response`(bytes): Response of the temperature control unit. 8 bits.
+        Returns True or False
+        
+        """
+        response = response.decode()
+        #Get checksum send by the controller
+        response_checksum = response[5:7]
+        #Calculate the checksum of the received response.
+        calculated_checksum = hex(sum(response[1:5].encode('ascii')) % 256)#[-2:]
+        if len(calculated_checksum) == 3:
+            calculated_checksum = '{c:0>2}'.format(c = calculated_checksum[-1])
+        else:
+            calculated_checksum = calculated_checksum[-2:]
+                
+        if response_checksum == calculated_checksum:
+            return True
+        else:
+            return False
+
+    def message_builder(self, command, value='0000'):
+        """
+        Constructs the message in the right format.
+        Input:
+        `command`(str): Command character with length 2, encoded in hexadecimal
+            ASCII characters.
+        `value`(str): Value characters with length 4, encoded in hexadecimal
+            ASCII characters.
+        Returns message as list of 10 individual bits.     
+        
+        Structure of message: (stx)CCDDDDSS(etx)
+            (stx): Start text character = '*'
+            CC: Command, 2 bits
+            DDDD: Value, 4 bits
+            SS: Checksum, 2 bits
+            (etx): End of text character = '\r'    
+        
+        """
+        message = ['*', '0', '0', '0', '0', '0', '0', '0', '0', '\r']
+        
+        #Command
+        if type(command) != str:
+            try:
+                command = str(command)
+            except Exception:
+                raise ValueError('Invalid command input: "{}", Type:"{}". Input should be a string of length 2'.format(command, type(command)))
+        if len(command) != 2:
+            raise ValueError('Invalid command input: "{}", Type:"{}". Input should be a string of length 2'.format(command, type(command)))
+        
+        message[1:2] = command[0], command[1]
+        
+        #Make string message
+        if type(value) != str:
+            try:
+                value = str(value)
+            except Exception:
+                raise ValueError('Invalid message input: "{}", Type:"{}". Input should be a string of length 4'.format(value, type(value)))
+        if len(value) != 4:
+            raise ValueError('Invalid message input: "{}", Type:"{}". Input should be a string of length 4'.format(value, type(value)))
+        
+        message[3:8] = value[0], value[1], value[2], value[3]
+        
+        #Checksum
+        checksum = self.make_checksum(message)
+        message[7:9] = checksum[0], checksum[1]
+        
+        return message
+
+    def send_message(self, message, write=False):
+        pass
+
+    def read_message(self, timeout=1, detect_error=True):
+        return None
+
+    #==========================================================================
+    #    Read functions
+    #==========================================================================
+
+    def get_temp(self):
+        time.sleep(0.005)
+        return np.random.rand()
+
+    def get_temp2(self):
+        return np.random.rand()
+
+    def get_mode(self):
+        """
+        Get the mode of the temperature control unit. 
+        Returns mode:
+            0 = Normal set
+            1 = Ramp/Soak set mode
+            2 = Proportional+Dead Band
+        
+        """
+        return 0
+
+    def get_control_type(self):
+        """
+        Get the control mode of the temperature control unit.
+        Relevant only if the mode is set to 0 (Normal set)
+        Return control type:
+            0 = PID, set a single fixed temperature.
+            1 = Manual, set a fixed output power level.
+            2 = Analog Out, Use with external variable voltage
+            supply.
+
+        """
+        return 0
+
+    def get_set_temp(self):
+        return np.random.rand()
+
+    def get_output(self):
+        return np.random.rand()
+
+    def get_set_output(self):
+        return np.random.rand()
+
+    def get_ramp_soak_status(self):
+        return np.random.rand()
+            
+    def get_soak_temp(self, location):
+        return np.random.rand()
+
+    def get_ramp_time(self, location):
+        return np.random.rand()
+
+    def get_soak_time(self, location):
+        return np.random.rand()
+
+    def get_repeats(self, location):
+        return np.random.rand()
+
+    def get_repeat_location(self, location):
+        return np.random.rand()
+
+    def validate_data(self, input):
+        pass
+
+    def check_mode(self, desired_mode):
+        return True
+
+    #==========================================================================
+    #    Set functions for the operation modes
+    #==========================================================================
+
+    def set_mode(self, mode):
+        pass
+
+    def set_control_type(self, control_type):
+        pass
+
+    #---------------------------------------------------------------------------
+    #    Set functions for Normal set mode
+    #    These functions are used to set and hold a single temperature
+    #    or output level.
+    #---------------------------------------------------------------------------
+
+    def set_temp(self, temperature):
+        pass
+
+    def set_output(self, output):
+        pass
+
+    def set_output_enable(self,enable):
+        pass
+
+
+    #---------------------------------------------------------------------------
+    #    Set functions for ramp/soak mode
+    #    Functions to set the ramp/soak sequence.
+    #---------------------------------------------------------------------------
+
+    def set_soak_temp(self, location, temperature):
+        pass
+
+    def set_ramp_time(self, location, time):
+        pass
+
+    def set_soak_time(self, location, time):
+        pass
+
+    def set_repeats(self, location, repeats):
+        pass
+
+    def set_repeat_location(self, location, repeat_loc):
+        pass
+
+    def set_sensor1_choice(self, sensor_choice):
+        pass
+
+    def set_sensor2_choice(self, sensor_choice):
+        pass
+
+
+    #--------------------------------------------------------------------------
+    #    Start stop functions
+    #--------------------------------------------------------------------------
+
+    def start_soak(self):
+        pass
+
+    def idle_soak(self):
+        pass
+
+    def set_idle(self):
+        pass
+
+    #==========================================================================
+    #    Combined functions
+    #    These are the most useful to the user
+    #==========================================================================
+
+    def get_sequence(self, location='all'):
+        pass
+
+    def set_single_sequence(self, location, temp=20, ramp_time=60, 
+                            soak_time=30000, repeats=1, go_to=None):
+        pass
+     
+    #==========================================================================
+    #   Wait until desired temperature is reached
+    #==========================================================================
+
+    def waitTemp(self, target_temp, error=1, array_size=5, sd=0.01, 
+                timeout = 5, set_idle = True):
+        pass
+
+    #==========================================================================
+    #    Check errors
+    #==========================================================================
+
+    def check_error(self, set_idle = True, raise_exception = True):
+        return True
