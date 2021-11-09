@@ -100,13 +100,7 @@ class TC720Controller(QObject):
         method = getattr(self.tc720,method_name)
         method(*parameters)
 
-    '''
-    def test_fucntion(self,args):
-        print('executing the test function')
-        self.test_function2(*args)
+    def close(self):
+        self.terminate_the_reading_thread = True
+        self.terminate_the_writing_thread = True
 
-    def test_function2(self,arg1,arg2,arg3):
-        print(arg1)
-        print(arg2)
-        print(arg3)
-    '''

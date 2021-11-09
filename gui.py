@@ -38,4 +38,5 @@ class GUI(QMainWindow):
 		self.tc720Controller.start()
 
 	def closeEvent(self, event):
+		self.tc720Controller.close()
 		event.accept()
