@@ -12,6 +12,7 @@ import queue
 class TC720Controller(QObject):
 
     signal_readings = Signal(list)
+    signal_plots = Signal(np.ndarray,np.ndarray)
 
     def __init__(self, serial_number=None,is_simulation=False):
         QObject.__init__(self)
@@ -28,6 +29,13 @@ class TC720Controller(QObject):
 
         # controller parameters
         self.set_temperature = 20
+
+        # logging and plotting
+        self.t_array = np.array([])
+        self.set_temperature_array = np.array([])
+        self.temperature1_array = np.array([])
+        self.temperature2_array = np.array([])
+        self.output_array = np.array([])
 
         # queue for updating parameters
         self.queue_parameter_update_command = queue.Queue()
@@ -48,15 +56,27 @@ class TC720Controller(QObject):
         while(self.terminate_the_reading_thread == False):
             if self.writing_lock_requested == False:
                 self.lock.acquire()
-                set_temperature = self.tc720.get_set_temp()
+                # get readings
+                # set_temperature = self.tc720.get_set_temp()
+                set_temperature = self.set_temperature
                 temperature_1 = self.tc720.get_temp()
                 temperature_2 = self.tc720.get_temp2()
                 output = self.tc720.get_output()
-                print([set_temperature,temperature_1,temperature_2,output])
+                # build arrays
+                self.t_array = np.append(self.t_array,time.time())
+                self.set_temperature_array = np.append(self.set_temperature_array,set_temperature)
+                self.temperature1_array = np.append(self.temperature1_array,temperature_1)
+                self.temperature2_array = np.append(self.temperature2_array,temperature_2)
+                self.output_array = np.append(self.output_array,output)
+                # plot
+                plot_arrays = np.vstack((self.set_temperature_array,self.temperature1_array,self.temperature2_array,self.output_array))
+                self.signal_plots.emit(self.t_array,plot_arrays)
+                # print([set_temperature,temperature_1,temperature_2,output])
                 self.signal_readings.emit([self.set_temperature,temperature_1,temperature_2,output])
                 self.lock.release()
             else:
                 pass
+            time.sleep(0.1)
 
     def send_parameter_update_commands(self):
         while(self.terminate_the_writing_thread == False):
@@ -71,6 +91,7 @@ class TC720Controller(QObject):
                 # update the controller object
                 if method_name == 'set_temp':
                     self.set_temperature = parameters[0]
+            time.sleep(0.1)
 
     def update_controller_parameter(self,method_name,parameters):
         self.queue_parameter_update_command.put((method_name,parameters))

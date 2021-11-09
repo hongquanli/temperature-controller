@@ -14,6 +14,7 @@ from collections import deque
 import time
 
 NUMBER_OF_CHANNELS_DISPLAY = 4
+pg.setConfigOptions(antialias=True)
 
 class ControlPanel(QFrame):
 
@@ -29,8 +30,8 @@ class ControlPanel(QFrame):
 
 	def add_components(self):
 
+		# logging
 		self.lineEdit_experimentID = QLineEdit()
-
 		self.btn_logging_onoff = QPushButton('Logging On/Off')
 		self.btn_logging_onoff.setDefault(False)
 		self.btn_logging_onoff.setCheckable(True)
@@ -41,23 +42,23 @@ class ControlPanel(QFrame):
 		grid_line2.addWidget(self.lineEdit_experimentID)
 		grid_line2.addWidget(self.btn_logging_onoff)
 
+		# settings
 		self.entry_set_temperature = QDoubleSpinBox()
 		self.entry_set_temperature.setMinimum(-20)
 		self.entry_set_temperature.setMaximum(60) 
 		self.entry_set_temperature.setSingleStep(0.1)
 		self.entry_set_temperature.setValue(20)
 		self.btn_update_set_temperature = QPushButton('Update')
-
 		self.btn_enable_output = QPushButton('Enable Output')
 		self.btn_enable_output.setCheckable(True)
-
+		
 		grid_line3 = QGridLayout()
 		grid_line3.addWidget(QLabel('Set Temperature'),0,0)
 		grid_line3.addWidget(self.entry_set_temperature, 0,1)
 		grid_line3.addWidget(self.btn_update_set_temperature,0,10)
 		grid_line3.addWidget(self.btn_enable_output,10,0,1,11)
 
-		# for displaying stepper position and flow/pressure measurements
+		# readings
 		self.label_channel_readings = {}
 		for i in range(NUMBER_OF_CHANNELS_DISPLAY):
 			self.label_channel_readings[str(i)] = QLabel()
@@ -74,6 +75,7 @@ class ControlPanel(QFrame):
 		grid_line4.addWidget(QLabel('Output'),3,0)
 		grid_line4.addWidget(self.label_channel_readings[str(3)],3,1)
 		
+		# widget arrangement
 		self.grid = QVBoxLayout()
 		self.grid.addLayout(grid_line3)
 		self.grid.addLayout(grid_line4)
@@ -113,21 +115,30 @@ class WaveformDisplay(QFrame):
 
 	def add_components(self):
 		self.plotWidget = {}
-		for i in range(2):
-			self.plotWidget[str(i)] = PlotWidget()
+		self.plotWidget['Temperature'] = PlotWidget('Temperature',add_legend=True)
+		self.plotWidget['Output'] = PlotWidget('Output')
 
 		layout = QGridLayout() #layout = QStackedLayout()
-		for i in range(2):
-			layout.addWidget(self.plotWidget[str(i)],i,0)
+		layout.addWidget(self.plotWidget['Temperature'],0,0)
+		layout.addWidget(self.plotWidget['Output'],1,0)
 		self.setLayout(layout)
 
 	def plot(self,time,data):
-		for i in range(2):
-			self.plotWidget[str(i)].plot(time,data[i,:])
+		self.plotWidget['Temperature'].plot(time,data[0,:],'Set Temperature',color=(255,255,255),clear=True)
+		self.plotWidget['Temperature'].plot(time,data[1,:],'Temperature 1',color=(255,200,0))
+		self.plotWidget['Temperature'].plot(time,data[2,:],'Temperature 2',color=(200,255,0))
+		self.plotWidget['Output'].plot(time,data[3,:],'Output',color=(200,200,200),clear=True)
 
 class PlotWidget(pg.GraphicsLayoutWidget):
-	def __init__(self, window_title='',parent=None):
+	
+	def __init__(self, title='',parent=None,add_legend=False):
 		super().__init__(parent)
-		self.plotWidget = self.addPlot(title = '')
-	def plot(self,x,y):
-		self.plotWidget.plot(x,y,pen=(0,3),clear=True)
+		self.plotWidget = self.addPlot(title = '', axisItems = {'bottom': pg.DateAxisItem()})
+		if add_legend:
+			self.plotWidget.addLegend()
+	
+	def plot(self,x,y,label,color,clear=False):
+		self.plotWidget.plot(x[-1000:],y[-1000:],pen=pg.mkPen(color=color,width=2),name=label,clear=clear)
+		# self.plotWidget.plot(x,y,clear=True)
+		# self.plotWidget.plot(np.random.rand(10),pen=(0,3),clear=True)
+		print('plot ' + label)
