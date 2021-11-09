@@ -103,4 +103,6 @@ class TC720Controller(QObject):
     def close(self):
         self.terminate_the_reading_thread = True
         self.terminate_the_writing_thread = True
+        self.thread_read.join()
+        self.thread_write.join()
 
