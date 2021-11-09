@@ -1235,10 +1235,11 @@ class TC720_simulation():
     #==========================================================================
 
     def get_temp(self):
-        time.sleep(0.005)
+        time.sleep(0.01)
         return np.random.rand()
 
     def get_temp2(self):
+        time.sleep(0.01)
         return np.random.rand()
 
     def get_mode(self):
@@ -1266,9 +1267,11 @@ class TC720_simulation():
         return 0
 
     def get_set_temp(self):
+        time.sleep(0.01)
         return np.random.rand()
 
     def get_output(self):
+        time.sleep(0.01)
         return np.random.rand()
 
     def get_set_output(self):
