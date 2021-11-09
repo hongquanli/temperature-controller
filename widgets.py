@@ -139,6 +139,3 @@ class PlotWidget(pg.GraphicsLayoutWidget):
 	
 	def plot(self,x,y,label,color,clear=False):
 		self.plotWidget.plot(x[-1000:],y[-1000:],pen=pg.mkPen(color=color,width=2),name=label,clear=clear)
-		# self.plotWidget.plot(x,y,clear=True)
-		# self.plotWidget.plot(np.random.rand(10),pen=(0,3),clear=True)
-		print('plot ' + label)
