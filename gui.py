@@ -31,6 +31,7 @@ class GUI(QMainWindow):
 
 		# connections
 		self.controlPanel.signal_tc720_parameter_update_command.connect(self.tc720Controller.update_controller_parameter)
+		self.controlPanel.signal_logging_onoff.connect(self.tc720Controller.logging_onoff)
 		self.tc720Controller.signal_readings.connect(self.controlPanel.display_readings)
 		self.tc720Controller.signal_plots.connect(self.waveformDisplay.plot)
 

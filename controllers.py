@@ -8,6 +8,8 @@ import time
 import threading
 import numpy as np
 import queue
+from pathlib import Path
+from datetime import datetime
 
 class TC720Controller(QObject):
 
@@ -36,6 +38,9 @@ class TC720Controller(QObject):
         self.temperature1_array = np.array([])
         self.temperature2_array = np.array([])
         self.output_array = np.array([])
+        self.logging_is_on = True
+        self.counter_file_flush = 0
+        self.file = open(str(Path.home()) + "/Downloads/Temperature Controller Log File_" + datetime.now().strftime('%Y-%m-%d %H-%M-%-S.%f') + ".csv", "w+")
 
         # queue for updating parameters
         self.queue_parameter_update_command = queue.Queue()
@@ -55,25 +60,36 @@ class TC720Controller(QObject):
     def read_temperature_and_output(self):
         while(self.terminate_the_reading_thread == False):
             if self.writing_lock_requested == False:
+                # read the controller
                 self.lock.acquire()
-                # get readings
                 # set_temperature = self.tc720.get_set_temp()
+                t = time.time()
                 set_temperature = self.set_temperature
                 temperature_1 = self.tc720.get_temp()
                 temperature_2 = self.tc720.get_temp2()
                 output = self.tc720.get_output()
+                self.lock.release()
                 # build arrays
-                self.t_array = np.append(self.t_array,time.time())
+                self.t_array = np.append(self.t_array,t)
                 self.set_temperature_array = np.append(self.set_temperature_array,set_temperature)
                 self.temperature1_array = np.append(self.temperature1_array,temperature_1)
                 self.temperature2_array = np.append(self.temperature2_array,temperature_2)
                 self.output_array = np.append(self.output_array,output)
-                # plot
+                # plot and display
                 plot_arrays = np.vstack((self.set_temperature_array,self.temperature1_array,self.temperature2_array,self.output_array))
                 self.signal_plots.emit(self.t_array,plot_arrays)
-                # print([set_temperature,temperature_1,temperature_2,output])
                 self.signal_readings.emit([self.set_temperature,temperature_1,temperature_2,output])
-                self.lock.release()
+                # log
+                if self.logging_is_on:
+                    self.file.write(str(t) + '\t' + 
+                                    str(set_temperature) + '\t' +
+                                    str(temperature_1) + '\t' +
+                                    str(temperature_2) + '\t' +
+                                    str(output) + '\n')
+                    self.counter_file_flush = self.counter_file_flush + 1
+                    if self.counter_file_flush>=50:
+                        self.counter_file_flush = 0
+                        self.file.flush()
             else:
                 pass
             time.sleep(0.1)
@@ -100,9 +116,17 @@ class TC720Controller(QObject):
         method = getattr(self.tc720,method_name)
         method(*parameters)
 
+    def logging_onoff(self,state,experiment_id):
+        self.logging_is_on = state
+        if state == False:
+            self.file.close()
+        else:
+            self.experiment_id = experiment_id
+            self.file = open(str(Path.home()) + "/Downloads/" + self.experiment_id + '_Temperature Controller Log File_' + datetime.now().strftime('%Y-%m-%d %H-%M-%-S.%f') + ".csv", "w+")
+
     def close(self):
         self.terminate_the_reading_thread = True
         self.terminate_the_writing_thread = True
         self.thread_read.join()
         self.thread_write.join()
-
+        self.file.close()
