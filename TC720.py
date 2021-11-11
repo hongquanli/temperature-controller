@@ -709,7 +709,7 @@ class TC720():
         `enable: 0:off, 1: on.
         """
         self.send_message(self.message_builder('30',  self.int_to_hex(enable)), write=True)
-        self.verboseprint('Output Enable set to: {}'.format(output))
+        self.verboseprint('Output Enable set to: {}'.format(enable))
 
 
     #---------------------------------------------------------------------------
