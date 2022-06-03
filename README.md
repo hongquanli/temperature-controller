@@ -13,7 +13,7 @@ The TC-720 has a large range of functions and settings. Most have been included 
   On windows the address looks like: 'COMX' and on unix it looks like 'dev/ttyUSBX', where X is the address number.  
   It will also give you the device's serial number, which you can use to find the port of this machine in the future, by using: `Py_TC720.find_address(identifier='<device-serial-number>')`.  
 * Use the address to instantiate the controller:  
-  `my_device = Py_TC720.TC720(address)`  
+  `my_device = TC720.TC720(address)`  
 * You are now ready to use the TC-720.
 * For example: Use the `my_device.set_temp()` function to set the controller to a desired temperature. 
 
