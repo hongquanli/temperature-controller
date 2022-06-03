@@ -7,8 +7,8 @@ The TC-720 has a large range of functions and settings. Most have been included 
 # Getting started
 * Install the dependencies: `pip install pyserial`
 * Download or clone the code.
-* Import the library: `import Py_TC720`
-* Find the device address: `Py_TC720.find_address()`  
+* Import the library: `import TC720`
+* Find the device address: `TC720.find_address()`  
   This will give you the port address of the device.  
   On windows the address looks like: 'COMX' and on unix it looks like 'dev/ttyUSBX', where X is the address number.  
   It will also give you the device's serial number, which you can use to find the port of this machine in the future, by using: `Py_TC720.find_address(identifier='<device-serial-number>')`.  
